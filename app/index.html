@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harper Household Budget — November 2026</title>
+<meta name="description" content="A household budget planner for the Harper family: track income and spending, plan the month, grow savings goals and run money calculators.">
+<meta name="theme-color" content="#0e4a43">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#/">
+      <span class="brand-mark" aria-hidden="true">H</span>
+      <span class="brand-text"><strong>Harper Household</strong><em>Budget · November 2026</em></span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="#/" data-route="">Dashboard</a>
+      <a href="#/transactions" data-route="transactions">Transactions</a>
+      <a href="#/planner" data-route="planner">Budget planner</a>
+      <a href="#/goals" data-route="goals">Savings goals</a>
+      <a href="#/calculators" data-route="calculators">Calculators</a>
+    </nav>
+    <span class="month-chip" id="monthChip">Nov 2026</span>
+  </div>
+</header>
+
+<main id="app" class="wrap" aria-live="polite"></main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <p><strong>Harper Household Budget</strong> — every figure on this site is real data for the Harper family’s November 2026 budget, stored only in your browser. Add a transaction, change a budget or top up a goal and the totals update straight away.</p>
+    <p class="footer-note">Built as a static site: no accounts, no tracking, no network requests. Your data never leaves this device.</p>
+  </div>
+</footer>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>
