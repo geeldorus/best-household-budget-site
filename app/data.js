@@ -201,6 +201,26 @@ export function savingsRate() {
   return ((income - totalSpending()) / income) * 100;
 }
 
+/** Cumulative spending by day of the month: [{ day, spent }] where spent is
+    everything spent from Nov 1 through that day. Days with no spending
+    carry the previous day's total, so the line never steps backwards.
+    Powers the dashboard's spending-pace chart (charts.js paceChart). */
+export function cumulativeSpending() {
+  const byDay = {};
+  for (const t of store.transactions) {
+    if (t.type !== 'expense') continue;
+    const day = Number(t.date.slice(8, 10));
+    byDay[day] = (byDay[day] || 0) + t.amount;
+  }
+  const out = [];
+  let running = 0;
+  for (let day = 1; day <= 30; day++) {
+    running += byDay[day] || 0;
+    out.push({ day, spent: Math.round(running * 100) / 100 });
+  }
+  return out;
+}
+
 /** Spending grouped by week of the month (weeks starting Nov 1, 8, 15, 22, 29). */
 export function weeklySpending() {
   const weeks = [0, 0, 0, 0, 0];

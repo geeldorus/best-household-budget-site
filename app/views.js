@@ -2,11 +2,11 @@
 // HTML; main.js renders it and wires the controls. Every figure comes from data.js.
 
 import {
-  CATEGORIES, MONTH, categoryById, essentialMonthlySpending, goalPercent, money, money0,
+  CATEGORIES, MONTH, categoryById, cumulativeSpending, essentialMonthlySpending, goalPercent, money, money0,
   savingsRate, sortedTransactions, spentByCategory, store, totalIncome,
   totalPlannedBudget, totalSpending, totalTransfers, weeklySpending,
 } from './data.js';
-import { spendingDonut, weeklyBars } from './charts.js';
+import { paceChart, spendingDonut, weeklyBars } from './charts.js';
 
 export const escape = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -44,12 +44,19 @@ export function dashboard() {
 
   const recent = sortedTransactions().filter((t) => t.type !== 'transfer').slice(0, 5);
   const topGoals = [...store.goals].sort((a, b) => goalPercent(b) - goalPercent(a)).slice(0, 2);
+  const pace = cumulativeSpending();
+  const planPerDay = planned / 30;
+  const cross = pace.find((d) => d.spent <= planPerDay * d.day);
+  const under = planned - spending;
+  const paceNote = cross
+    ? `The mortgage lands on Nov 1, so spending runs ahead of the plan until Nov ${cross.day} — then the plan catches up, and November ends ${money(Math.abs(under))} ${under >= 0 ? 'under' : 'over'} plan.`
+    : `Spending ran ahead of the plan all month, and November ends ${money(Math.abs(under))} ${under >= 0 ? 'under' : 'over'} plan.`;
 
   return `
   <div class="page-head">
     <p class="kicker">Dashboard · ${escape(MONTH)}</p>
     <h1>November at a glance</h1>
-    <p class="lede">The Harpers earned ${money(income)} and spent ${money(spending)} so far in November — a savings rate of ${rate.toFixed(1)}%. Housing is the biggest cost, groceries are on plan, and utilities are the one category over budget.</p>
+    <p class="lede">The Harpers earned ${money(income)} and spent ${money(spending)} in November — a savings rate of ${rate.toFixed(1)}%. Housing is the biggest cost, groceries are on plan, and utilities are the one category over budget. The pace chart below shows how spending tracked against the plan day by day.</p>
   </div>
 
   <div class="tiles">
@@ -63,7 +70,7 @@ export function dashboard() {
     <section class="card">
       <div class="card-head"><h2>Where the money went</h2><a class="more" href="#/planner">See the full plan →</a></div>
       <div class="chart-wrap">
-        ${spendingDonut(spent, CATEGORIES.filter((c) => c.id !== 'savings'), 200)}
+        ${spendingDonut(spent, CATEGORIES.filter((c) => c.id !== 'savings'), 180)}
         <ul class="legend">
           ${legend.map((r) => `<li><span class="swatch" style="background:${r.color}"></span>${escape(r.name)}<span class="amt">${money0(r.spent)}</span><span class="pct">${r.pct.toFixed(0)}%</span></li>`).join('')}
         </ul>
@@ -84,6 +91,12 @@ export function dashboard() {
       </section>
     </div>
   </div>
+
+  <section class="card" style="margin-top:16px">
+    <div class="card-head"><h2>Spending pace — day by day against the plan</h2><span class="pill">${money0(planPerDay)} a day keeps the plan</span></div>
+    ${paceChart(pace, planned)}
+    <p class="hint" style="margin:8px 0 0"><span class="pace-key"><span class="pace-line actual"></span>Actual spending</span> <span class="pace-key"><span class="pace-line plan"></span>Plan (${money0(planPerDay)} a day)</span> — ${escape(paceNote)}</p>
+  </section>
 
   <div class="grid grid-main" style="margin-top:16px">
     <section class="card">
@@ -118,7 +131,7 @@ export function dashboard() {
 
 // ---------------- Transactions ----------------
 
-export function transactions(filter = 'all') {
+export function transactions(filter = 'all', query = '') {
   const spent = spentByCategory();
   const all = sortedTransactions();
   const list = filter === 'all'
@@ -140,18 +153,23 @@ export function transactions(filter = 'all') {
     <p class="lede">${all.length} transactions this month: ${money(income)} in, ${money(spending)} out, plus a ${money0(totalTransfers())} transfer to savings. Add one below and every total on the site updates.</p>
   </div>
 
+  <div class="search-row">
+    <label for="txSearch">Search</label>
+    <input id="txSearch" type="search" placeholder="Search merchant or note — try GreenMart" value="${escape(query)}" autocomplete="off">
+  </div>
+
   <div class="filter-bar" role="group" aria-label="Filter transactions by category">
     ${chips.map((c) => `<button type="button" class="chip-btn${filter === c.id ? ' on' : ''}" data-action="filter" data-filter="${c.id}">${escape(c.label)}</button>`).join('')}
   </div>
 
   <div class="grid grid-main">
     <section class="card">
-      <div class="card-head"><h2>${filter === 'all' ? 'All transactions' : filter === 'income' ? 'Income' : escape(categoryById(filter).name)}</h2><span class="pill">${list.length} shown</span></div>
+      <div class="card-head"><h2>${filter === 'all' ? 'All transactions' : filter === 'income' ? 'Income' : escape(categoryById(filter).name)}</h2><span class="pill" id="txCount">${list.length} shown</span></div>
       ${list.length === 0 ? '<p class="empty">Nothing in this category yet — add one with the form.</p>' : `
       <table>
         <thead><tr><th>Date</th><th>What</th><th class="hide-phone">Category</th><th class="num">Amount</th><th></th></tr></thead>
-        <tbody>
-          ${list.map((t) => `<tr class="${t.type}">
+        <tbody id="txBody">
+          ${list.map((t) => `<tr class="${t.type}" data-search="${escape((t.merchant + ' ' + (t.note || '') + ' ' + (t.type === 'income' ? 'income' : categoryById(t.category).name)).toLowerCase())}">
             <td>${fmtDate(t.date)}</td>
             <td><span class="merchant">${escape(t.merchant)}</span><span class="note">${escape(t.note)}</span></td>
             <td class="hide-phone">${t.type === 'income' ? 'Income' : t.type === 'transfer' ? 'Transfer' : escape(categoryById(t.category).name)}</td>
@@ -159,7 +177,8 @@ export function transactions(filter = 'all') {
             <td class="row-actions"><button type="button" class="icon-btn danger" data-action="delete-tx" data-id="${t.id}" title="Delete this transaction">Delete</button></td>
           </tr>`).join('')}
         </tbody>
-      </table>`}
+      </table>
+      <p class="empty" id="txNoMatch" hidden>No transactions match that search — try a different word.</p>`}
     </section>
 
     <section class="card">

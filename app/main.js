@@ -15,6 +15,26 @@ import { calculators, dashboard, goals, notFound, planner, transactions } from '
 const app = document.getElementById('app');
 const monthChip = document.getElementById('monthChip');
 let txFilter = 'all';
+let txQuery = '';
+
+/** Filter the visible transaction rows by the search box, without a full
+    re-render (so the input keeps focus). Updates the shown count and the
+    no-match note. */
+function applyTxSearch() {
+  const body = document.getElementById('txBody');
+  const count = document.getElementById('txCount');
+  const noMatch = document.getElementById('txNoMatch');
+  if (!body) return;
+  const q = txQuery.trim().toLowerCase();
+  let shown = 0;
+  for (const row of body.querySelectorAll('tr')) {
+    const hit = !q || (row.dataset.search || '').includes(q);
+    row.style.display = hit ? '' : 'none';
+    if (hit) shown++;
+  }
+  if (count) count.textContent = `${shown} shown`;
+  if (noMatch) noMatch.hidden = shown !== 0;
+}
 
 // ---------- calculators ----------
 
@@ -135,7 +155,7 @@ function render() {
   let html;
   let title;
   if (route === '') { html = dashboard(); title = 'Dashboard'; }
-  else if (route === 'transactions') { html = transactions(txFilter); title = 'Transactions'; }
+  else if (route === 'transactions') { html = transactions(txFilter, txQuery); title = 'Transactions'; }
   else if (route === 'planner') { html = planner(); title = 'Budget planner'; }
   else if (route === 'goals') { html = goals(); title = 'Savings goals'; }
   else if (route === 'calculators') { html = calculators(); title = 'Calculators'; }
@@ -144,6 +164,8 @@ function render() {
   app.innerHTML = html;
   // Calculators need the page in the document before their results can be written.
   if (route === 'calculators') runCalculators();
+  // A search typed before a re-render (add/delete while filtering) still applies.
+  if (route === 'transactions' && txQuery) applyTxSearch();
   setActiveNav(route);
   window.scrollTo(0, 0);
   window.__shotReady = true;
@@ -212,6 +234,10 @@ document.addEventListener('submit', (event) => {
 document.addEventListener('input', (event) => {
   const target = event.target;
   if (target.matches?.('[data-calc]')) runCalculators();
+  if (target.id === 'txSearch') {
+    txQuery = target.value;
+    applyTxSearch();
+  }
   if (target.id === 'txType') {
     const cat = document.getElementById('txCategory');
     if (cat) cat.disabled = target.value === 'income';
