@@ -3,8 +3,8 @@
     "file": "1-dashboard.jpg",
     "path": "#/",
     "viewport": {
-      "height": 800,
-      "width": 1280
+      "width": 1280,
+      "height": 1500
     }
   },
   {
@@ -16,10 +16,10 @@
     }
   },
   {
-    "file": "3-goals.jpg",
-    "path": "#/goals",
+    "file": "3-calculators.jpg",
+    "path": "#/calculators",
     "viewport": {
-      "height": 800,
+      "height": 900,
       "width": 1280
     }
   },

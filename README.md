@@ -8,8 +8,8 @@ A household budget site for the Harper family — November 2026. A working plann
 
 **What it does**
 
-- **Dashboard** — income, spending, savings rate and budget left at a glance, a donut chart of spending by category, spending by week, recent transactions and savings-goal progress.
-- **Transactions** — all 54 transactions of the month, filterable by category, with a working add form and delete buttons; every total on the site recalculates.
+- **Dashboard** — income, spending, savings rate and budget left at a glance, a donut chart of spending by category, spending by week, a day-by-day spending-pace chart against the monthly plan, recent transactions and savings-goal progress.
+- **Transactions** — all 54 transactions of the month, searchable by merchant or note and filterable by category, with a working add form and delete buttons; every total on the site recalculates.
 - **Budget planner** — an editable budget for each of 13 categories, spent-vs-budget bars with over/under indicators, and a 50/30/20 split view.
 - **Savings goals** — four goals (emergency fund, family holiday, new car, home deposit) with progress bars and working "add funds" controls.
 - **Calculators** — an emergency-fund calculator, a debt-payoff calculator with real amortisation maths, and a 50/30/20 paycheck split, all live as you type.
@@ -20,4 +20,4 @@ Static files under `app/` — no build step, no network requests, no external fo
 
 Built for the make.fun best household budget site bounty (best-household-budget-site-20261126-1457). MIT licensed.
 
-**Screenshots** — `screenshots/1-dashboard.jpg` (dashboard cover), `2-transactions.jpg`, `3-goals.jpg`, `4-phone.jpg` (planner at phone size), all real renders of the site in headless Chromium.
+**Screenshots** — `screenshots/1-dashboard.jpg` (dashboard cover), `2-transactions.jpg`, `3-calculators.jpg`, `4-phone.jpg` (planner at phone size), all real renders of the site in headless Chromium.
